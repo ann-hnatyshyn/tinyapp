@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ann-hnatyshyn/tinyapp/issues"
   },
-  "homepage": "https://github.com/ann-hnatyshyn/tinyapp#readme"
+  "homepage": "https://github.com/ann-hnatyshyn/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
 }
