@@ -36,15 +36,24 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
   res.render("urls_show", templateVars);
 });
 
+// app.get("/u/:id", (req, res) => {
+//   const longURL = req.body.longURL;
+//   res.redirect(longURL);
+// });
+
 app.post("/urls", (req, res) => {
+  let shortURL = generateRandomString();
+  let longURL = req.body.longURL;
+  urlDatabase[shortURL] = longURL;
+  res.redirect(`/urls/:${shortURL}`);
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
 });
 
-function generateRandomString() {};
+const generateRandomString = function() {
+  return Math.random().toString(36).substring(2, 8);// Simple random string generator
+};
