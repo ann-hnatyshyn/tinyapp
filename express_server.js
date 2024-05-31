@@ -1,5 +1,6 @@
 const express = require("express");
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;
 
@@ -77,6 +78,15 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('username', 'value');
+  const username = req.body.username;
+  res.cookie(username, 'value');
   res.redirect(`/urls`);
+});
+
+app.get("/urls", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"],
+    // ... any other vars
+  };
+  res.render("urls_index", templateVars);
 });
