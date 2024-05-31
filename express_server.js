@@ -41,11 +41,6 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// app.get("/u/:id", (req, res) => {
-//   const longURL = req.body.longURL;
-//   res.redirect(longURL);
-// });
-
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
@@ -57,3 +52,8 @@ app.post("/urls", (req, res) => {
 const generateRandomString = function() {
   return Math.random().toString(36).substring(2, 8);// Simple random string generator
 };
+
+app.get("/u/:id", (req, res) => {
+  const longURL = req.body.longURL;
+  res.redirect(longURL);
+});
