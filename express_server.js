@@ -58,7 +58,7 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-app.post("/urls/:id", (req, res) => {
+app.post("/urls/:id/delete", (req, res) => {
   delete req.body.longURL;
   res.redirect(`/urls`);
 });
