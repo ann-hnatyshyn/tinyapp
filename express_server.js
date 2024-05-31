@@ -1,14 +1,18 @@
 const express = require("express");
+const morgan = require('morgan');
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
+//middleware
+app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
+//configuration
 app.set("view engine", "ejs");
 
 app.get("/", (req, res) => {
@@ -60,5 +64,19 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
+});
+
+app.post("/urls/logout", (req, res) => {
+  res.clearCookie('cookieName');
+});
+
+app.get('/login', (req, res) => {
+  res.cookie("${username}, value");
+  res.redirect(`/urls`);
+});
+
+app.post('/login', (req, res) => {
+  res.cookie('username', 'value');
   res.redirect(`/urls`);
 });
