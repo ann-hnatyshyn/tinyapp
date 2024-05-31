@@ -32,7 +32,9 @@
           <% for (let id in urls) { %>
             <tr>
               <td><%= id %></td>
-              <td><%= urls[id] %></tr>
+              <td><%= urls[id] %></td>
+              <td><button type="submit" class="btn btn-outline-danger">Delete</button></td>
+              </tr>
           <% } %>
         </tbody>
       </table>
