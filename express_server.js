@@ -10,6 +10,7 @@ const urlDatabase = {
 };
 
 //middleware
+app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,10 +33,6 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
-});
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
@@ -73,20 +70,26 @@ app.post("/urls/logout", (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.cookie("${username}, value");
   res.redirect(`/urls`);
 });
 
 app.post('/login', (req, res) => {
   const username = req.body.username;
-  res.cookie(username, 'value');
+  res.cookie("username", username);
   res.redirect(`/urls`);
 });
 
 app.get("/urls", (req, res) => {
+  console.log(req.cookies.username);
   const templateVars = {
+    urls: urlDatabase,
     username: req.cookies["username"],
     // ... any other vars
   };
   res.render("urls_index", templateVars);
 });
+
+// app.get("/urls", (req, res) => {
+//   const templateVars = { urls: urlDatabase };
+//   res.render("urls_index", templateVars);
+// });
