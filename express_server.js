@@ -130,7 +130,7 @@ app.post("/urls/logout", (req, res) => {
 });
 
 
-app.post('/login', (req, res) => {
+app.post('/register', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   let foundUser = null;
@@ -162,7 +162,7 @@ app.get('protected', (req, res) => {
   res.render('protected', templateVars);
 });
 
-app.post('/register', (req, res) => {
+// app.post('/register', (req, res) => {
 
-  res.redirect(`/urls`);
-});
+//   res.redirect(`/urls`);
+// });
