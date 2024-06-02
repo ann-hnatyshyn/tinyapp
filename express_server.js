@@ -74,7 +74,6 @@ app.get("/urls", (req, res) => {
 // });
 
 //POST
-
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
@@ -88,12 +87,14 @@ const generateRandomString = function() {
 };
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
+  const id = req.params.id;
+  delete urlDatabase[id];
   res.redirect(`/urls`);
 });
 
 app.post("/urls/logout", (req, res) => {
   res.clearCookie('cookieName');
+  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
