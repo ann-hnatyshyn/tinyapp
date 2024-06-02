@@ -74,7 +74,6 @@ app.get("/urls", (req, res) => {
 // });
 
 //POST
-
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
