@@ -87,12 +87,14 @@ const generateRandomString = function() {
 };
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
+  const id = req.params.id;
+  delete urlDatabase[id];
   res.redirect(`/urls`);
 });
 
 app.post("/urls/logout", (req, res) => {
   res.clearCookie('cookieName');
+  res.redirect('/urls');
 });
 
 app.post('/login', (req, res) => {
