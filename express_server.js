@@ -92,8 +92,23 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
+app.post("/urls/:id/edit", (req, res) => {
+  res.redirect(`/urls/index`);
+});
+
+app.post("/urls/:id", (req, res) => {
+  let id = req.params.id; // Get the unique ID from the URL path
+  const newLongURL = req.body.longURL; // Get the new long URL from the form data
+  if (id) { // Check if the URL with the given ID exists
+    id = newLongURL; // Update the URL
+    res.redirect(`/urls`); // Redirect to the main URL listing page
+  } else {
+    res.status(404).send('URL not found');
+  }
+});
+
 app.post("/urls/logout", (req, res) => {
-  res.clearCookie('cookieName');
+  res.clearCookie('username');
   res.redirect('/urls');
 });
 
