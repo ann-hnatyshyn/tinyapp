@@ -23,9 +23,10 @@
       <div class="card-footer text-muted">
         <h5 class="card-title">Edit</h5>
         <p class="card-text">
-          <form action="/urls" method="POST">
-            New URL: <input type="text" name="username" placeholder=""></input>
+          <form action="/urls/<%= id %>" method="POST">
+            New URL: <input type="text" name="long URL" placeholder="Enter new URL"></input>
             <button type="submit"class="btn btn-primary">Submit</button>
+            </a>
           </form>
         </p>
     </div>
