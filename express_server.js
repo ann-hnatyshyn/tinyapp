@@ -63,6 +63,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get('/register', (req, res) => {
+  res.render('urls_register.ejs');
+});
+
 // app.get('/urls/new', (req, res) => {
 //   const username = req.session.username;
 //   res.render('urls_new.ejs', { username: username });
