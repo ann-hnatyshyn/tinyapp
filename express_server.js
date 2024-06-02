@@ -64,7 +64,8 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.redirect(`/urls`);
+  res.render('login');
+  // res.redirect(`/urls`);
 });
 
 app.get("/urls", (req, res) => {
@@ -103,12 +104,6 @@ const generateRandomString = function() {
   return Math.random().toString(36).substring(2, 8);// Simple random string generator
 };
 
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect(`/urls`);
-});
-
 app.post("/urls/:id/edit", (req, res) => {
   res.redirect(`/urls/index`);
 });
@@ -124,6 +119,12 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect(`/urls`);
+});
+
 app.post("/urls/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
@@ -131,26 +132,27 @@ app.post("/urls/logout", (req, res) => {
 
 
 app.post('/register', (req, res) => {
-  const username = req.body.username;
+  const email = req.body.email;
   const password = req.body.password;
-  let foundUser = null;
-  if (!username || !password) {
+  let foundEmail = null;
+  if (!email || !password) {
     res.status(400).send('please provide both a username and a password');
   }
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.username === username) {
-      foundUser = user;
+  for (const userEmail in users) {
+    const email = users[userEmail];
+    if (email.userEmail === email) {
+      foundEmail = userEmail;
     }
   }
-  if (!foundUser) {
-    res.status(400).send('no user with that username found');
+  if (foundEmail) {
+    res.status(400).send('email already in use');
   }
-  if (foundUser.password !== password) {
-    res.status(400).send('the passwords fo not match');
+  if (foundEmail.password !== password) {
+    res.status(400).send('the password does not match');
   }
-  res.cookie("userId", foundUser.id);
+  res.cookie("userId", foundEmail.id);
   res.redirect(`/protected`);
+  res.render('register');
 });
 
 app.get('protected', (req, res) => {
@@ -161,8 +163,3 @@ app.get('protected', (req, res) => {
   const templateVars = {};
   res.render('protected', templateVars);
 });
-
-// app.post('/register', (req, res) => {
-
-//   res.redirect(`/urls`);
-// });
