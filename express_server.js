@@ -4,15 +4,6 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080;
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-};
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
 //middleware
 app.use(cookieParser());
 app.use(morgan('dev'));
@@ -20,6 +11,28 @@ app.use(express.urlencoded({ extended: true }));
 
 //configuration
 app.set("view engine", "ejs");
+
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com",
+};
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "1234",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "5678",
+  },
+};
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
 
 //GET
 app.get("/", (req, res) => {
@@ -116,8 +129,40 @@ app.post("/urls/logout", (req, res) => {
   res.redirect('/urls');
 });
 
+
 app.post('/login', (req, res) => {
   const username = req.body.username;
-  res.cookie("username", username);
+  const password = req.body.password;
+  let foundUser = null;
+  if (!username || !password) {
+    res.status(400).send('please provide both a username and a password');
+  }
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.username === username) {
+      foundUser = user;
+    }
+  }
+  if (!foundUser) {
+    res.status(400).send('no user with that username found');
+  }
+  if (foundUser.password !== password) {
+    res.status(400).send('the passwords fo not match');
+  }
+  res.cookie("userId", foundUser.id);
+  res.redirect(`/protected`);
+});
+
+app.get('protected', (req, res) => {
+  const userId = req.cookies.userId;
+  if (!userId) {
+    res.status(401).send('you need to be logged in to see this page');
+  }
+  const templateVars = {};
+  res.render('protected', templateVars);
+});
+
+app.post('/register', (req, res) => {
+
   res.redirect(`/urls`);
 });
