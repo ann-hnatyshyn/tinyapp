@@ -65,7 +65,6 @@ app.get("/u/:id", (req, res) => {
 
 app.get('/login', (req, res) => {
   res.render('login');
-  // res.redirect(`/urls`);
 });
 
 app.get("/urls", (req, res) => {
@@ -78,18 +77,8 @@ app.get("/urls", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  res.render('urls_register.ejs');
+  res.render('/register');
 });
-
-// app.get('/urls/new', (req, res) => {
-//   const username = req.session.username;
-//   res.render('urls_new.ejs', { username: username });
-// });
-
-// app.get("/urls", (req, res) => {
-//   const templateVars = { urls: urlDatabase };
-//   res.render("urls_index", templateVars);
-// });
 
 //POST
 app.post("/urls", (req, res) => {
@@ -147,7 +136,7 @@ app.post('/register', (req, res) => {
   if (foundEmail) {
     res.status(400).send('email already in use');
   }
-  if (foundEmail.password !== password) {
+  if (password !== password) {
     res.status(400).send('the password does not match');
   }
   res.cookie("userId", foundEmail.id);
