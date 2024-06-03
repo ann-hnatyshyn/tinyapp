@@ -36,15 +36,15 @@ const users = {
   },
 };
 
-// const findUserByEmail = (email, users) => {
-//   for (const userId in users) {
-//     const user = users[userId];
-//     if (user.email === email) {
-//       return user[userId];
-//     }
-//   }
-//   return null;
-// };
+const findUserByEmail = (email, users) => {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      return user[userId];
+    }
+  }
+  return null;
+};
 
 /////Routes/////
 
@@ -155,11 +155,11 @@ app.post('/register', (req, res) => {
     return res.status(400).send('That email is already in use');
   }
   const userId = generateRandomUserId();
-  // const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = bcrypt.hash(password, 10);
   const newUser = {
     id: userId,
     email: email,
-    password: password,
+    password: hashedPassword,
   };
   users[userId] = newUser;
   console.log(users);
@@ -183,6 +183,7 @@ app.get('/login', (req, res) => {
     res.render('login', templateVars);
   }
 });
+
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -190,15 +191,16 @@ app.post('/login', (req, res) => {
   if (!email || !password) {
     return res.status(403).send('please provide both a username and a password');
   }
-  let foundUser = null;
 
-  if (!foundUser) {
+  findUserByEmail();
+
+  if (!findUserByEmail) {
     return res.status(400).send('no user with that email found');
   }
-  if (foundUser.password !== password) {
+  if (findUserByEmail.password !== password) {
     return res.status(400).send('the passwords do not match');
   }
-  res.cookie('user_id', foundUser);
+  res.cookie('user_id', findUserByEmail);
   res.redirect("/urls"); //<====== change?
 });
 
@@ -216,31 +218,4 @@ app.post("/logout", (req, res) => {
 //   }
 //   const templateVars = {};
 //   res.render('protected', templateVars);
-// });
-
-
-
-
-// app.post('/register', (req, res) => {
-//   const email = req.body.email;
-//   const password = req.body.password;
-//   let foundEmail = null;
-//   // res.render('register');
-//   if (!email || !password) {
-//     res.status(400).send('please provide both an email and a password');
-//   }
-//   for (const userEmail in users) {
-//     const email = users[userEmail];
-//     if (email.userEmail === email) {
-//       foundEmail = userEmail;
-//     }
-//   }
-//   if (foundEmail) {
-//     res.status(400).send('email already in use');
-//   }
-//   if (password !== password) {
-//     res.status(400).send('the password does not match');
-//   }
-//   res.cookie("userId", foundEmail.id);
-//   res.redirect(`/register`);
 // });
