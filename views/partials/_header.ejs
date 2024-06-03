@@ -17,17 +17,16 @@
         <a class="nav-item nav-link" href="/urls"style="color: white;">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new"style="color: white;">Create New URL</a>
       </div>
-      </nav>
-      </div>
-        <a type ="submit" class="nav-item nav-link" href="/login"style="color: white;">Login</a>
-        <a type ="submit" class="nav-item nav-link" href="/register"style="color: white;">Register</a>
-        <% if (user) { %>
-        <form action="/logout" method="POST">
+    </nav>
+      <!-- <% if (users) { %> -->
+        <div>
+         <button type ="submit" href="/login"class="color: white;">Login</button>
+         <button type ="submit" href="/register"class="color: white;">Register</button>
+          <!-- <% } else {%> -->
+          <!-- <form action="/logout" method="POST">
           <button type="submit" class="btn btn-primary">Log out</button>
-        </form>
-        <% } else {%>
-          <a href="/login">Login</a>
-          <a href="/register">Register</a>
-        <% } %>
+          </form> -->
+          <!-- <% } %> -->
+        </div>
   </nav>
 </header>
