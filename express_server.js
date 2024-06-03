@@ -62,11 +62,17 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user = req.cookies.user_id;
+  if (!user) {
+    res.redirect("/login");
+  }
   res.render('urls_new.ejs', { user });
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+  if (!longURL) {
+    return "That Short URL ID does not exsist, please try again";
+  }
   res.redirect(longURL);
 });
 
@@ -79,6 +85,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  const user = req.cookies.user_id;
+  if (!user) {
+    return "Please login to shorten URLs";
+  }
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
   urlDatabase[shortURL] = longURL;
