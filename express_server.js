@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 8080;
 
@@ -35,15 +36,15 @@ const users = {
   },
 };
 
-const findUserByEmail = (email, users) => {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
+// const findUserByEmail = (email, users) => {
+//   for (const userId in users) {
+//     const user = users[userId];
+//     if (user.email === email) {
+//       return user[userId];
+//     }
+//   }
+//   return null;
+// };
 
 /////Routes/////
 
@@ -60,20 +61,19 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const username = req.cookies.username;
-  res.render('urls_new.ejs', { username: username });
+  const user = req.cookies.user_id;
+  res.render('urls_new.ejs', { user });
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = req.body.longURL;
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
-
 
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"],
+    user: req.cookies["user_id"],
   };
   res.render("urls_index", templateVars);
 });
@@ -91,8 +91,8 @@ const generateRandomString = function() {
 };
 
 app.get("/urls/:id", (req, res) => {
-  const username = req.cookies.username;
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username};
+  const user = req.cookies.user_id;
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user};
   res.render("urls_show", templateVars);
 });
 
@@ -125,54 +125,88 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
-app.post("/urls/logout", (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');
-});
+///Register///
 
-//Register//
 app.get('/register', (req, res) => {
-  res.render('/register');
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { user };
+  if (user) {
+    res.redirect('/urls');
+  } else {
+    res.render('register', templateVars);
+  }
 });
 
 app.post('/register', (req, res) => {
-  const { email, password } = req.body;
+  const email = req.body.email;
+  const password = req.body.password;
   if (!email || !password) {
-    return res.status(400).send('Email and password cannot be empty');
+    return res.status(400).send('Email and password are required');
   }
-  if (findUserByEmail(email, users)) {
-    return res.status(400).send('Email already registered');
+  let foundUser = null;
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      foundUser = email;
+    }
   }
-  const userId = `user_${Date.now()}`;
+  if (foundUser) {
+    return res.status(400).send('That email is already in use');
+  }
+  const userId = generateRandomUserId();
+  // const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = {
     id: userId,
-    email,
-    password // In production, hash the password with bcrypt
+    email: email,
+    password: password,
   };
   users[userId] = newUser;
-  res.render('register');
+  console.log(users);
   res.cookie('user_id', userId);
-  res.redirect('/urls');
+  res.redirect('/login');
 });
+
+const generateRandomUserId = function(length = 6) {
+  return Math.random().toString(36).substring(2, 2 + length);
+};
 
 ////Log IN /////
+
 app.get('/login', (req, res) => {
-  res.render('login');
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { user };
+  if (user) {
+    res.redirect('/urls');
+  } else {
+    res.render('login', templateVars);
+  }
 });
-
 app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  const user = findUserByEmail(email, users);
-  if (!user) {
-    return res.status(403).send('User not found');
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(req.body);
+  if (!email || !password) {
+    return res.status(403).send('please provide both a username and a password');
   }
-  if (user.password !== password) { // In production, use bcrypt to compare passwords
-    return res.status(403).send('Password does not match');
+  let foundUser = null;
+
+  if (!foundUser) {
+    return res.status(400).send('no user with that email found');
   }
-  req.session.username = user.id;
-  res.redirect('/urls');
+  if (foundUser.password !== password) {
+    return res.status(400).send('the passwords do not match');
+  }
+  res.cookie('user_id', foundUser);
+  res.redirect("/urls"); //<====== change?
 });
 
+///Logout///
+app.post("/logout", (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/login');
+});
 
 
 // app.get('protected', (req, res) => {
