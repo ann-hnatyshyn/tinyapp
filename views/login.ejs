@@ -7,7 +7,7 @@
    <title>Login Page</title>
   </head>
 <body>
-  <main style="margin: 1em;">
+  <main style="margin: 1em;"></main>
     <h3>Create TinyURL</h3>
      <form class="form-inline" action="/login" method="POST">
         <div class="form-group mb-2">
@@ -18,14 +18,15 @@
           name="longURL"
           placeholder="http://"
           style="width: 300px; margin: 1em"
-          />
+         />
         </div>
       </form>
     <form action="/login" method="POST">
-      <label><input type="text" name="email" placeholder="Enter Email"></input></label>
-      <label><input type="password" name="password" placeholder="Password"></input></label>
+      <label>Email</label>
+      <input type="text" name="email" placeholder="Enter Email"></input>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Password"></input>
       <button type="submit">Log In</button>
     </form>
-  </main>
 </body>
 </html>
