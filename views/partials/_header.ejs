@@ -12,13 +12,19 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <nav class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls"style="color: white;">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new"style="color: white;">Create New URL</a>
       </div>
-        <a type ="submit" class="nav-item nav-link" href="/register"style="color: white;">Register</a>
+      </nav>
       </div>
+        <a type ="submit" class="nav-item nav-link" href="/register"style="color: white;">Register</a>
         <a type ="submit" class="nav-item nav-link" href="/login"style="color: white;">Login</a>
+        <% if (username) { %>
+        <form action="/logout" method="POST">
+          <button type="submit" class="btn btn-primary">Log out</button>
+        </form>
+        <% } %>
   </nav>
 </header>
