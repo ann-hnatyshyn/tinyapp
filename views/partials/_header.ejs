@@ -19,12 +19,15 @@
       </div>
       </nav>
       </div>
-        <a type ="submit" class="nav-item nav-link" href="/register"style="color: white;">Register</a>
         <a type ="submit" class="nav-item nav-link" href="/login"style="color: white;">Login</a>
-        <% if (username) { %>
+        <a type ="submit" class="nav-item nav-link" href="/register"style="color: white;">Register</a>
+        <% if (user) { %>
         <form action="/logout" method="POST">
           <button type="submit" class="btn btn-primary">Log out</button>
         </form>
+        <% } else {%>
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
         <% } %>
   </nav>
 </header>

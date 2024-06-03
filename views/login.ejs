@@ -4,12 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Page</title>
+  <%- include('partials/_header') %>
 </head>
 <body>
-  <form action="/login" method="POST">
-    <label><input type="text" name="email" placeholder="Email"></label>
-    <label><input type="password" name="password" placeholder="Password"></input></label>
-    <button type="submit">Log In</button>
-  </form>
+  <main style="margin: 1em;">
+    <h3>Create TinyURL</h3>
+    <form class="form-inline" action="/login" method="POST">
+      <div class="form-group mb-2">
+        <label for="longURL">Enter a URL:</label>
+        <input
+          class="form-control"
+          type="text"
+          name="longURL"
+          placeholder="http://"
+          style="width: 300px; margin: 1em"
+        />
+        </div>
+      </form>
+    <form action="/login" method="POST">
+      <label><input type="text" name="email" placeholder="Enter Email"></input></label>
+      <label><input type="password" name="password" placeholder="Password"></input></label>
+      <button type="submit">Log In</button>
+    </form>
+  </main>
 </body>
 </html>
