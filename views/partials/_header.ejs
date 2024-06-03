@@ -19,14 +19,8 @@
       </div>
     </nav>
         <div>
-        <% if (!user) { %>
-          <form action="/login" method="POST"></form>
-          <button type ="submit" href="/register">Register</button>
-          <button type ="submit" href="/login">Login</button>
-        <% } else { %>
-          Logged in as: <%= "user" %>
-          <button type ="submit" href="/logout"class="color: white;">logout</button>
-        <% } %>
+          <a class="nav-item nav-link" href="/register"style="color: white;">Register</a>
         </div>
+        <a class="nav-item nav-link" href="/login"style="color: white;">Login</a>
   </nav>
 </header>

@@ -97,15 +97,16 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  let id = req.params.id;
+  const id = req.params.id;
   const newLongURL = req.body.longURL;
-  if (id) { // Check if the URL with the given ID exists
-    newLongURL[urlDatabase]; // Update the URL
+  if (urlDatabase[id]) {
+    urlDatabase[id] = newLongURL;
     res.redirect(`/urls`);
   } else {
     res.status(404).send('URL not found');
   }
 });
+
 
 ///Edit and Delete Buttons///
 app.post("/urls/:id/edit", (req, res) => {
@@ -114,13 +115,6 @@ app.post("/urls/:id/edit", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  // const urlId = req.params.id;
-  // if (urlDatabase[urlId] && urlDatabase[urlId].userId === req.session.user_id) {
-  //   delete urlDatabase[id];
-  //   res.redirect('/urls');
-  // } else {
-  //   res.status(403).send('You do not have permission to delete this URL');
-  // }
   delete urlDatabase[id];
   res.redirect(`/urls`);
 });
@@ -155,15 +149,26 @@ app.post('/register', (req, res) => {
     return res.status(400).send('That email is already in use');
   }
   const userId = generateRandomUserId();
-  const hashedPassword = bcrypt.hash(password, 10);
+
+  const hashPassword = async function(password) {
+    return bcrypt.hash(password, 10)
+      .then(hashedPassword => {
+        return hashedPassword;
+      })
+      .catch(err => {
+        console.error('Error hashing password:', err);
+        throw err;
+      });
+  };
+
   const newUser = {
     id: userId,
     email: email,
-    password: hashedPassword,
+    password: hashPassword,
   };
   users[userId] = newUser;
   console.log(users);
-  res.cookie('user_id', userId);
+  res.cookie('user_id', newUser);
   res.redirect('/login');
 });
 
@@ -192,7 +197,7 @@ app.post('/login', (req, res) => {
     return res.status(403).send('please provide both a username and a password');
   }
 
-  findUserByEmail();
+  findUserByEmail(email, password);
 
   if (!findUserByEmail) {
     return res.status(400).send('no user with that email found');
