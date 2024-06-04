@@ -52,7 +52,7 @@ const findUserByEmail = (email, users) => {
   return null;
 };
 
-const urlsForUser(id) = function () {
+const urlsForUser = function(id) {
   const userUrls = {};
   for (const shortURL in urlDatabase) {
     if (urlDatabase[shortURL].userID === id) {
@@ -86,7 +86,7 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user = req.cookies.user_id;
-  if (!user) { //<======if (user) { 
+  if (!user) { 
     return res.redirect("/login"); //<======res.redirect("/new")
   }
   res.render('urls_new', { user });
@@ -154,14 +154,32 @@ app.post("/urls/:id", (req, res) => {
 
 ///Edit and Delete Buttons///
 app.post("/urls/:id/edit", (req, res) => {
-  res.redirect(`/urls/index`);
+  const user = req.cookies.user_id;
+  const id = req.params.id;
+  const urlData = urlDatabase[id];
+  if (!urlData) {
+    return res.status(404).send('URL not found');
+  }
+  if (urlData.userID !== user) {
+    return res.status(403).send('You do not have permission to edit this URL');
+  }
+  res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  const user = req.cookies.user_id;
   const id = req.params.id;
+  const urlData = urlDatabase[id];
+  if (!urlData) {
+    return res.status(404).send('URL not found');
+  }
+  if (urlData.userID !== user) {
+    return res.status(403).send('You do not have permission to delete this URL');
+  }
   delete urlDatabase[id];
   res.redirect(`/urls`);
 });
+
 
 app.get('/register', (req, res) => {
   const userId = req.cookies.user_id;
@@ -173,19 +191,12 @@ app.get('/register', (req, res) => {
   }
 });
 
-app.post('/register', (req, res) => {
+app.post('/register', async(req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
     return res.status(400).send('Email and password are required');
   }
-  // let foundUser = null;
-  // for (const userId in users) {
-  //   const user = users[userId];
-  //   if (user.email === email) {
-  //     foundUser = email;
-  //   }
-  // }
   const user = findUserByEmail(email, users);
   if (user) {
     return res.status(400).send('That email is already in use');
@@ -232,13 +243,13 @@ app.post('/login', (req, res) => {
     return res.status(400).send('no user with that email found');
   }
   bcrypt.compare(password, user.password, (err, result) => {
-  if (result) {
-    res.cookie('user_id', findUserByEmail);
-    res.redirect("/urls"); //<====== change?
-  } else {
-    return res.status(400).send('the passwords do not match');
-  }
-  })
+    if (result) {
+      res.cookie('user_id');
+      res.redirect("/urls"); //<====== change?
+    } else {
+      return res.status(400).send('the passwords do not match');
+    }
+  });
 });
 
 app.post("/logout", (req, res) => {
@@ -246,10 +257,10 @@ app.post("/logout", (req, res) => {
   res.redirect('/login');
 });
 
-app.get('protected', (req, res) => {
-  const userId = req.cookies.userId;
-  if (!userId) {
-   return res.status(401).send('you need to be logged in to see this page');
-  }
-  res.render('protected', { user: users[userId] });
-});
+// app.get('protected', (req, res) => {
+//   const userId = req.cookies.userId;
+//   if (!userId) {
+//    return res.status(401).send('you need to be logged in to see this page');
+//   }
+//   res.render('protected', { user: users[userId] });
+// });
