@@ -19,8 +19,14 @@ app.listen(PORT, () => {
 
 //Helper functions//
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -62,8 +68,8 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user = req.cookies.user_id;
-  if (!user) {
-    res.redirect("/login");
+  if (user) {
+    res.redirect("/new");
   }
   res.render('urls_new.ejs', { user });
 });
@@ -71,7 +77,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   if (!longURL) {
-    return "That Short URL ID does not exsist, please try again";
+    return res.status(400).send('That Short URL ID does not exist, please try again');
   }
   res.redirect(longURL);
 });
@@ -87,11 +93,11 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   const user = req.cookies.user_id;
   if (!user) {
-    return "Please login to shorten URLs";
+    return res.status(400).send('Please login to access this page');
   }
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase.longURL = longURL;
   res.redirect(`/urls/${shortURL}`);
   console.log(req.body); // Log the POST request body to the console
 });
@@ -115,6 +121,7 @@ app.post("/urls/:id", (req, res) => {
   } else {
     res.status(404).send('URL not found');
   }
+  if (urlDatabase[id]);
 });
 
 
@@ -128,8 +135,6 @@ app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[id];
   res.redirect(`/urls`);
 });
-
-///Register///
 
 app.get('/register', (req, res) => {
   const userId = req.cookies.user_id;
@@ -159,7 +164,6 @@ app.post('/register', (req, res) => {
     return res.status(400).send('That email is already in use');
   }
   const userId = generateRandomUserId();
-
   const hashPassword = async function(password) {
     return bcrypt.hash(password, 10)
       .then(hashedPassword => {
@@ -170,9 +174,8 @@ app.post('/register', (req, res) => {
         throw err;
       });
   };
-
   const newUser = {
-    id: userId,
+    id: generateRandomUserId,
     email: email,
     password: hashPassword,
   };
@@ -186,7 +189,6 @@ const generateRandomUserId = function(length = 6) {
   return Math.random().toString(36).substring(2, 2 + length);
 };
 
-////Log IN /////
 
 app.get('/login', (req, res) => {
   const userId = req.cookies.user_id;
@@ -206,9 +208,7 @@ app.post('/login', (req, res) => {
   if (!email || !password) {
     return res.status(403).send('please provide both a username and a password');
   }
-
   findUserByEmail(email, password);
-
   if (!findUserByEmail) {
     return res.status(400).send('no user with that email found');
   }
@@ -219,18 +219,18 @@ app.post('/login', (req, res) => {
   res.redirect("/urls"); //<====== change?
 });
 
-///Logout///
+
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/login');
 });
 
 
-// app.get('protected', (req, res) => {
-//   const userId = req.cookies.userId;
-//   if (!userId) {
-//     res.status(401).send('you need to be logged in to see this page');
-//   }
-//   const templateVars = {};
-//   res.render('protected', templateVars);
-// });
+app.get('protected', (req, res) => {
+  const userId = req.cookies.userId;
+  if (!userId) {
+    res.status(401).send('you need to be logged in to see this page');
+  }
+  const templateVars = {};
+  res.render('protected', templateVars);
+});
