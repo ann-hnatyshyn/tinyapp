@@ -6,7 +6,10 @@ const app = express();
 const PORT = 8080;
 
 //middleware//
-app.use(cookieSession());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'],
+}));
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
@@ -70,6 +73,16 @@ const generateRandomUserId = function(length = 6) {
   return Math.random().toString(36).substring(2, 2 + length);
 };
 
+const getUserByEmail = function(email, database) {
+  for (let userId in database) {
+    if (database[userId].email === email) {
+      return database[userId];
+    }
+  }
+  return null; // Return null if no user is found
+};
+
+
 /////Routes/////
 
 app.get("/", (req, res) => {
@@ -85,7 +98,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
   if (!user) {
     return res.redirect("/login"); //<======res.redirect("/new")
   }
@@ -101,7 +114,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
 
   if (!user) {
     return res.redirect('/login');
@@ -114,7 +127,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
   if (!user) {
     return res.status(400).send('Please login to access this page');
   }
@@ -125,7 +138,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
   if (!user) {
     return res.redirect('/login');
   }
@@ -138,7 +151,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -155,7 +168,7 @@ app.post("/urls/:id", (req, res) => {
 
 ///Edit and Delete Buttons///
 app.post("/urls/:id/edit", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -168,7 +181,7 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const user = req.session.user_id;
+  const user = req.session['user_id'];
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -183,7 +196,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 app.get('/register', (req, res) => {
-  const userId = req.session.user_id;
+  const userId = req.session['user_id'];
   const user = users[userId];
   if (user) {
     res.redirect('/urls');
@@ -204,27 +217,18 @@ app.post('/register', (req, res) => {
   }
   const userId = generateRandomUserId();
   const hashPassword = bcrypt.hashSync(password, 10);
-  // async function(password) {
-  //   return bcrypt.hash(password, 10)
-  //     .then(hashedPassword => {
-  //       return hashedPassword;
-  //     })
-  //     .catch(err => {
-  //       console.error('Error hashing password:', err);
-  //       throw err;
-  //     });
   const newUser = {
     id: userId,
     email: email,
     password: hashPassword,
   };
   users[userId] = newUser;
-  res.cookie('user_id', newUser);
+  req.session['user_id'] = user.id;
   res.redirect('/urls');
 });
 
 app.get('/login', (req, res) => {
-  const userId = req.session.user_id ? req.session.user_id : null;
+  const userId = req.session['user_id'] ? req.session['user_id'] : null;
   if (userId) {
     return res.redirect('/urls');
   }
@@ -242,7 +246,7 @@ app.post('/login', (req, res) => {
     return res.status(400).send('no user with that email found');
   }
   if (bcrypt.compareSync(password, user.password)) {
-    res.cookie('user_id', user.id);
+    req.session['user_id'] = user.id;
     res.redirect("/urls");
   } else {
     return res.status(400).send('the passwords do not match');
@@ -250,6 +254,6 @@ app.post('/login', (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session['user_id'] = null;
   res.redirect('/login');
 });
