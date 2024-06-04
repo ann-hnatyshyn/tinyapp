@@ -202,7 +202,7 @@ app.post('/register', async(req, res) => {
     return res.status(400).send('That email is already in use');
   }
   const userId = generateRandomUserId();
-  const hashPassword = await bcrypt.hash(password, 10);
+  const hashPassword = bcrypt.hash(password, 10);
   // async function(password) {
   //   return bcrypt.hash(password, 10)
   //     .then(hashedPassword => {
@@ -223,13 +223,11 @@ app.post('/register', async(req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const userId = req.cookies.user_id;
-  // const user = users[userId];
-  // const templateVars = { user };
+  const userId = req.cookies.user ? req.cookies.user.id : null;
   if (userId) {
     return res.redirect('/urls');
   }
-  res.render('login');//, templateVars
+  res.render('login');
 });
 
 app.post('/login', (req, res) => {
@@ -242,7 +240,7 @@ app.post('/login', (req, res) => {
   if (!user) {
     return res.status(400).send('no user with that email found');
   }
-  bcrypt.compare(password, user.password, (err, result) => {
+  bcrypt.compareSync(password, user.password, (err, result) => {
     if (result) {
       res.cookie('user_id');
       res.redirect("/urls"); //<====== change?
