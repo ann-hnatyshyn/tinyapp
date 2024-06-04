@@ -1,12 +1,12 @@
 const express = require("express");
 const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 8080;
 
 //middleware//
-app.use(cookieParser());
+app.use(cookieSession());
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
@@ -85,8 +85,8 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = req.cookies.user_id;
-  if (!user) { 
+  const user = req.session.user_id;
+  if (!user) {
     return res.redirect("/login"); //<======res.redirect("/new")
   }
   res.render('urls_new', { user });
@@ -101,7 +101,8 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
+
   if (!user) {
     return res.redirect('/login');
   }
@@ -113,7 +114,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   if (!user) {
     return res.status(400).send('Please login to access this page');
   }
@@ -124,7 +125,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   if (!user) {
     return res.redirect('/login');
   }
@@ -137,7 +138,7 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -154,7 +155,7 @@ app.post("/urls/:id", (req, res) => {
 
 ///Edit and Delete Buttons///
 app.post("/urls/:id/edit", (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -167,7 +168,7 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -182,7 +183,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 app.get('/register', (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   if (user) {
     res.redirect('/urls');
@@ -191,7 +192,7 @@ app.get('/register', (req, res) => {
   }
 });
 
-app.post('/register', async(req, res) => {
+app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
@@ -202,7 +203,7 @@ app.post('/register', async(req, res) => {
     return res.status(400).send('That email is already in use');
   }
   const userId = generateRandomUserId();
-  const hashPassword = bcrypt.hash(password, 10);
+  const hashPassword = bcrypt.hashSync(password, 10);
   // async function(password) {
   //   return bcrypt.hash(password, 10)
   //     .then(hashedPassword => {
@@ -223,7 +224,7 @@ app.post('/register', async(req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const userId = req.cookies.user ? req.cookies.user.id : null;
+  const userId = req.session.user_id ? req.session.user_id : null;
   if (userId) {
     return res.redirect('/urls');
   }
@@ -236,29 +237,19 @@ app.post('/login', (req, res) => {
   if (!email || !password) {
     return res.status(403).send('please provide both a username and a password');
   }
-  const user = findUserByEmail(email, password);
+  const user = findUserByEmail(email, users);
   if (!user) {
     return res.status(400).send('no user with that email found');
   }
-  bcrypt.compareSync(password, user.password, (err, result) => {
-    if (result) {
-      res.cookie('user_id');
-      res.redirect("/urls"); //<====== change?
-    } else {
-      return res.status(400).send('the passwords do not match');
-    }
-  });
+  if (bcrypt.compareSync(password, user.password)) {
+    res.cookie('user_id', user.id);
+    res.redirect("/urls");
+  } else {
+    return res.status(400).send('the passwords do not match');
+  }
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
   res.redirect('/login');
 });
-
-// app.get('protected', (req, res) => {
-//   const userId = req.cookies.userId;
-//   if (!userId) {
-//    return res.status(401).send('you need to be logged in to see this page');
-//   }
-//   res.render('protected', { user: users[userId] });
-// });
