@@ -1,9 +1,13 @@
 const express = require("express");
 const morgan = require('morgan');
-const cookieSession = require('cookie-session');
+const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 8080;
+const mocha = require('mocha');
+const chai = require('chai');
+mocha();
+chai();
 
 //middleware//
 app.use(cookieSession({
@@ -12,6 +16,8 @@ app.use(cookieSession({
 }));
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
+
+
 
 //configuration//
 app.set("view engine", "ejs");
@@ -49,7 +55,7 @@ const findUserByEmail = (email, users) => {
   for (const userId in users) {
     const user = users[userId];
     if (user.email === email) {
-      return user; //<=======return user[userId];
+      return user;
     }
   }
   return null;
@@ -73,14 +79,14 @@ const generateRandomUserId = function(length = 6) {
   return Math.random().toString(36).substring(2, 2 + length);
 };
 
-const getUserByEmail = function(email, database) {
-  for (let userId in database) {
-    if (database[userId].email === email) {
-      return database[userId];
-    }
-  }
-  return null; // Return null if no user is found
-};
+// const getUserByEmail = function(email, database) {
+//   for (let userId in database) {
+//     if (database[userId].email === email) {
+//       return database[userId];
+//     }
+//   }
+//   return null; // Return null if no user is found
+// };
 
 
 /////Routes/////
@@ -114,13 +120,13 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id; //<===== const user = req.session['user_id'];?
 
   if (!user) {
     return res.redirect('/login');
   }
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(user),
     user,
   };
   res.render("urls_index", templateVars);
@@ -133,25 +139,28 @@ app.post("/urls", (req, res) => {
   }
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  urlDatabase.longURL = longURL;
+  urlDatabase[shortURL] = {
+    longURL,
+    userID: user
+  }; //<===== urlDatabase.longURL = longURL;?
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id;
   if (!user) {
     return res.redirect('/login');
   }
   const urlData = urlDatabase[req.params.id];
-  if (urlData.userID !== user) {
+  if (!urlData || urlData.userID !== user) {
     return res.status(403).send('You do not have permission to view this URL');
   }
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user};
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user};
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id;
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -161,14 +170,14 @@ app.post("/urls/:id", (req, res) => {
     return res.status(403).send('You are unable to edit this URL');
   }
   const newLongURL = req.body.longURL;
-  urlDatabase[id] = newLongURL;
+  urlDatabase[id].longURL = newLongURL;
   res.redirect(`/urls`);
 });
 
 
 ///Edit and Delete Buttons///
 app.post("/urls/:id/edit", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id;
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -181,7 +190,7 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id;
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
@@ -194,14 +203,14 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
-
+///Register///
 app.get('/register', (req, res) => {
-  const userId = req.session['user_id'];
+  const userId = req.session.user_id;
   const user = users[userId];
   if (user) {
     res.redirect('/urls');
   } else {
-    res.render('register', user);
+    res.render('register', { user:  null}); //<=====?
   }
 });
 
@@ -223,12 +232,13 @@ app.post('/register', (req, res) => {
     password: hashPassword,
   };
   users[userId] = newUser;
-  req.session['user_id'] = user.id;
+  req.session.newUser = userId; //<====?
   res.redirect('/urls');
 });
 
+///Login///
 app.get('/login', (req, res) => {
-  const userId = req.session['user_id'] ? req.session['user_id'] : null;
+  const userId = req.session.user_id ? req.session.user_id : null;
   if (userId) {
     return res.redirect('/urls');
   }
@@ -247,12 +257,14 @@ app.post('/login', (req, res) => {
   }
   if (bcrypt.compareSync(password, user.password)) {
     req.session['user_id'] = user.id;
+    console.log(`User ${user.id} logged in successfully`);
     res.redirect("/urls");
   } else {
     return res.status(400).send('the passwords do not match');
   }
 });
 
+///Logout///
 app.post("/logout", (req, res) => {
   req.session['user_id'] = null;
   res.redirect('/login');
