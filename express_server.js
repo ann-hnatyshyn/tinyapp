@@ -1,20 +1,30 @@
+//dependencies//
 const express = require("express");
 const morgan = require('morgan');
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const app = express();
+
+//helperFunctions//
+const urlDatabase = require("./helperFunctions.js");
+const users = require("./helperFunctions.js");
+const findUserByEmail = require("./helperFunctions.js");
+const urlsForUser = require("./helperFunctions.js");
+const generateRandomString = require("./helperFunctions.js");
+const generateRandomUserId = require("./helperFunctions.js");
+const salt = bcrypt.genSaltSync(saltRounds);
+const hash = bcrypt.hashSync(myPlaintextPassword, salt);
 const PORT = 8080;
 
 
 //middleware//
+app.use(morgan('dev'));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2'],
 }));
-app.use(morgan('dev'));
-app.use(express.urlencoded({ extended: true }));
-
-
 
 //configuration//
 app.set("view engine", "ejs");
@@ -23,62 +33,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Helper functions//
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "1234",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "5678",
-  },
-};
-
-const findUserByEmail = (email, users) => {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
-
-const urlsForUser = function(id) {
-  const userUrls = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      userUrls[shortURL] = urlDatabase[shortURL];
-    }
-  }
-  return userUrls;
-};
-
-const generateRandomString = function() {
-  return Math.random().toString(36).substring(2, 8);
-};
-
-const generateRandomUserId = function(length = 6) {
-  return Math.random().toString(36).substring(2, 2 + length);
-};
-
-
 /////Routes/////
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -109,7 +64,6 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = req.session.user_id;
-
   if (!user) {
     return res.redirect('/login');
   }
@@ -130,7 +84,7 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = {
     longURL,
     userID: user
-  }; //<===== urlDatabase.longURL = longURL;?
+  };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -195,7 +149,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get('/register', (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
-  console.log({ userId, user });
+  console.log(userId, user);
   if (user) {
     res.redirect('/urls');
   } else {
@@ -228,7 +182,7 @@ app.post('/register', (req, res) => {
 ///Login///
 app.get('/login', (req, res) => {
   const userId = req.session.user_id ? req.session.user_id : null;
-  console.log({ userId});
+  console.log("userId");
   if (userId) {
     return res.redirect('/urls');
   }
@@ -252,11 +206,49 @@ app.post('/login', (req, res) => {
   } else {
     return res.status(400).send('the passwords do not match');
   }
- 
 });
+
+const requireLogin = (req, res, next) => {
+  if (!req.session['user_id']) {
+    return res.redirect('/login');
+  }
+  next();
+};
 
 ///Logout///
 app.post("/logout", (req, res) => {
-  req.session['user_id'] = null;
+  req.session = null;
   res.redirect('/login');
+});
+
+// Protecting routes
+app.get("/urls", requireLogin, (req, res) => {
+  const user = req.session['user_id'];
+  const templateVars = {
+    urls: urlDatabase,
+    user,
+  };
+  res.render("urls_index", templateVars);
+});
+
+app.get("/urls/:id", requireLogin, (req, res) => {
+  const user = req.session['user_id'];
+  const urlData = urlDatabase[req.params.id];
+  if (urlData.userID !== user) {
+    return res.status(403).send('You do not have permission to view this URL');
+  }
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user};
+  res.render("urls_show", templateVars);
+});
+
+
+
+const myPlaintextPassword = 's0/\/\P4$$w0rD';
+const someOtherPlaintextPassword = 'not_bacon';
+
+
+bcrypt.genSalt(saltRounds, function(err, salt) {
+  bcrypt.hash(myPlaintextPassword, salt, function(err, hash) {
+    console.log(hash);
+  });
 });
