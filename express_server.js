@@ -4,10 +4,7 @@ const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 const app = express();
 const PORT = 8080;
-const mocha = require('mocha');
-const chai = require('chai');
-mocha();
-chai();
+
 
 //middleware//
 app.use(cookieSession({
@@ -72,21 +69,12 @@ const urlsForUser = function(id) {
 };
 
 const generateRandomString = function() {
-  return Math.random().toString(36).substring(2, 8);// Simple random string generator
+  return Math.random().toString(36).substring(2, 8);
 };
 
 const generateRandomUserId = function(length = 6) {
   return Math.random().toString(36).substring(2, 2 + length);
 };
-
-// const getUserByEmail = function(email, database) {
-//   for (let userId in database) {
-//     if (database[userId].email === email) {
-//       return database[userId];
-//     }
-//   }
-//   return null; // Return null if no user is found
-// };
 
 
 /////Routes/////
@@ -104,9 +92,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id;
   if (!user) {
-    return res.redirect("/login"); //<======res.redirect("/new")
+    return res.redirect("/login");
   }
   res.render('urls_new', { user });
 });
@@ -120,7 +108,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const user = req.session.user_id; //<===== const user = req.session['user_id'];?
+  const user = req.session.user_id;
 
   if (!user) {
     return res.redirect('/login');
@@ -133,7 +121,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = req.session['user_id'];
+  const user = req.session.user_id;
   if (!user) {
     return res.status(400).send('Please login to access this page');
   }
@@ -207,10 +195,11 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get('/register', (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
+  console.log({ userId, user });
   if (user) {
     res.redirect('/urls');
   } else {
-    res.render('register', { user:  null}); //<=====?
+    res.render('register', { user:  null});
   }
 });
 
@@ -232,13 +221,14 @@ app.post('/register', (req, res) => {
     password: hashPassword,
   };
   users[userId] = newUser;
-  req.session.newUser = userId; //<====?
+  req.session.newUser = userId;
   res.redirect('/urls');
 });
 
 ///Login///
 app.get('/login', (req, res) => {
   const userId = req.session.user_id ? req.session.user_id : null;
+  console.log({ userId});
   if (userId) {
     return res.redirect('/urls');
   }
@@ -262,6 +252,7 @@ app.post('/login', (req, res) => {
   } else {
     return res.status(400).send('the passwords do not match');
   }
+ 
 });
 
 ///Logout///
