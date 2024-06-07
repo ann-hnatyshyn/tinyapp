@@ -1,3 +1,4 @@
+
 //Helper functions//
 const urlDatabase = {
   b6UTxQ: {
@@ -11,15 +12,15 @@ const urlDatabase = {
 };
 
 const users = {
-  userRandomID: {
+  userId: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "1234",
+    password: 1234
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "5678",
+    password: 5678
   },
 };
 

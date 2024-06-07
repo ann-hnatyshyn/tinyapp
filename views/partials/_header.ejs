@@ -18,9 +18,18 @@
         <a class="nav-item nav-link" href="/urls/new"style="color: white;">Create New URL</a>
       </div>
     </nav>
+    <% if (user) { %>
+      <li>Welcome, <%= user.email %></li>
+      <li>
+        <form method="POST" action="/logout">
+          <button type="submit">Logout</button>
+        </form>
+      </li>
+      <% } else { %>
         <div>
           <a class="nav-item nav-link" href="/register"style="color: white;">Register</a>
         </div>
         <a class="nav-item nav-link" href="/login"style="color: white;">Login</a>
+      <% } %>
   </nav>
 </header>
