@@ -14,9 +14,6 @@ const urlsForUser = require("./helperFunctions.js");
 const generateRandomString = require("./helperFunctions.js");
 const generateRandomUserId = require("./helperFunctions.js");
 
-// Debugging utility
-const logSession = (req) => console.log('Session:', req.session);
-
 //middleware//
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
@@ -27,7 +24,6 @@ app.use(cookieSession({
 
 //configuration//
 app.set("view engine", "ejs");
-
 
 /////Routes/////
 app.get("/urls.json", (req, res) => {
@@ -79,20 +75,18 @@ app.get("/urls/new", (req, res) => {
 
 ///Register///
 app.get('/register', (req, res) => {
-  const userId = req.session.user_id;
-  logSession(req); // Debug session
-  const user = users[userId]; // Use the value of userId to look up the user
+  const userId = req.session.user_id ? req.session.user_id : null;
+  const user = users[userId];
   if (user) {
-    res.redirect('/urls');
+    return res.redirect('/urls');
   } else {
-    res.render('register', { userId: null });
+    res.render('register', { user: req.user });
   }
 });
 
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  logSession(req); // Debug session
   if (!email || !password) {
     return res.status(400).send('Email and password are required');
   }
@@ -115,12 +109,10 @@ app.post('/register', (req, res) => {
 ///Login///
 app.get('/login', (req, res) => {
   const userId = req.session.user_id ? req.session.user_id : null;
-  logSession(req); // Debug session
   if (userId) {
     return res.redirect('/urls');
   }
-  res.render('login');
-  console.log(userId);
+  res.render('login', { user: req.user });
 });
 
 app.post('/login', (req, res) => {
@@ -135,7 +127,6 @@ app.post('/login', (req, res) => {
   }
   if (bcrypt.compareSync(password, user.password)) {
     req.session.userId = user.id;
-    res.cookie('lastLogin', new Date().toISOString()); // Setting a custom cookie
     res.redirect("/urls");
   } else {
     return res.status(400).send('the passwords do not match');
@@ -213,12 +204,13 @@ app.post("/logout", (req, res) => {
   res.redirect('/login');
 });
 
-// Protecting routes
-const requireLogin = (req, res, next) => {
-  if (!req.session.user_id) {
-    return res.redirect('/login');
+// Protecting routes//
+const requireLogin = function(req, res, next) {   ///check if user is logged in
+  if (req.user) {
+    next();
+  } else {
+    res.redirect('/login');
   }
-  next();
 };
 
 app.get("/urls", requireLogin, (req, res) => {
@@ -231,7 +223,8 @@ app.get("/urls", requireLogin, (req, res) => {
 });
 
 app.get("/urls/:id", requireLogin, (req, res) => {
-  const user = users[req.session.user_id];
+  res.send('/urls');
+  const user = req.session.user_id;
   const urlData = urlDatabase[req.params.id];
   if (!urlData) {
     return res.status(404).send('URL not found');
@@ -241,19 +234,6 @@ app.get("/urls/:id", requireLogin, (req, res) => {
   }
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user};
   res.render("urls_show", templateVars);
-});
-
-
-const saltRounds = 10;
-const myPlaintextPassword = 's0/4$$w0rD';
-const salt = bcrypt.genSaltSync(saltRounds);
-const hash = bcrypt.hashSync(myPlaintextPassword, salt);
-
-
-bcrypt.genSalt(saltRounds, function(err, salt) {
-  bcrypt.hash(myPlaintextPassword, salt, function(err, hash) {
-    console.log(hash);
-  });
 });
 
 // Start the server
