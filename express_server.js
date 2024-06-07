@@ -27,15 +27,15 @@ app.set("view engine", "ejs");
 
 /////Routes/////
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  return res.json(urlDatabase);
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  return res.send("Hello!");
 });
 
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  return res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.get("/urls", (req, res) => {
@@ -47,7 +47,7 @@ app.get("/urls", (req, res) => {
     urls: urlsForUser(user),
     user,
   };
-  res.render("urls_index", templateVars);
+  return res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -61,7 +61,7 @@ app.post("/urls", (req, res) => {
     longURL,
     userID: user
   };
-  res.redirect(`/urls/${shortURL}`);
+  return res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
@@ -70,7 +70,7 @@ app.get("/urls/new", (req, res) => {
   if (!user) {
     return res.redirect("/login");
   }
-  res.render('urls_new', { user });
+  return res.render('urls_new', { user });
 });
 
 ///Register///
@@ -80,7 +80,7 @@ app.get('/register', (req, res) => {
   if (user) {
     return res.redirect('/urls');
   } else {
-    res.render('register', { user: req.user });
+    return res.render('register', { user: req.user });
   }
 });
 
@@ -95,15 +95,15 @@ app.post('/register', (req, res) => {
     return res.status(400).send('That email is already in use');
   }
   const userId = generateRandomUserId();
-  const hashPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const newUser = {
     id: userId,
     email: email,
-    password: hashPassword,
+    password: hashedPassword,
   };
-  users[userId] = newUser;
+  users.push(newUser);
   req.session.userId = userId;
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 ///Login///
@@ -112,7 +112,7 @@ app.get('/login', (req, res) => {
   if (userId) {
     return res.redirect('/urls');
   }
-  res.render('login', { user: req.user });
+  return res.render('login', { user: req.user });
 });
 
 app.post('/login', (req, res) => {
@@ -131,7 +131,7 @@ app.post('/login', (req, res) => {
   } else {
     return res.status(400).send('the passwords do not match');
   }
-  res.redirect('/urls');
+  return res.redirect('/urls');
 });
 
 app.get("/u/:id", (req, res) => {
@@ -139,7 +139,7 @@ app.get("/u/:id", (req, res) => {
   if (!longURL) {
     return res.status(400).send('That Short URL ID does not exist, please try again');
   }
-  res.redirect(longURL);
+  return res.redirect(longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -152,7 +152,7 @@ app.get("/urls/:id", (req, res) => {
     return res.status(403).send('You do not have permission to view this URL');
   }
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user};
-  res.render("urls_show", templateVars);
+  return res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -160,14 +160,14 @@ app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const urlData = urlDatabase[id];
   if (!urlData) {
-    res.status(404).send('URL not found');
+    return res.status(404).send('URL not found');
   }
   if (urlData.userID !== user) {
     return res.status(403).send('You are unable to edit this URL');
   }
   const newLongURL = req.body.longURL;
   urlDatabase[id].longURL = newLongURL;
-  res.redirect(`/urls`);
+  return res.redirect(`/urls`);
 });
 
 ///Edit and Delete Buttons///
@@ -181,7 +181,7 @@ app.post("/urls/:id/edit", (req, res) => {
   if (urlData.userID !== user) {
     return res.status(403).send('You do not have permission to edit this URL');
   }
-  res.redirect(`/urls/${id}`);
+  return res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -195,21 +195,22 @@ app.post("/urls/:id/delete", (req, res) => {
     return res.status(403).send('You do not have permission to delete this URL');
   }
   delete urlDatabase[id];
-  res.redirect(`/urls`);
+  return res.redirect(`/urls`);
 });
 
 ///Logout///
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect('/login');
+  return res.redirect('/login');
 });
 
 // Protecting routes//
-const requireLogin = function(req, res, next) {   ///check if user is logged in
+//**check if user is logged in
+const requireLogin = function(req, res, next) {
   if (req.user) {
     next();
   } else {
-    res.redirect('/login');
+    return res.redirect('/login');
   }
 };
 
@@ -219,7 +220,7 @@ app.get("/urls", requireLogin, (req, res) => {
     urls: urlDatabase,
     user,
   };
-  res.render("urls_index", templateVars);
+  return res.render("urls_index", templateVars);
 });
 
 app.get("/urls/:id", requireLogin, (req, res) => {
@@ -233,7 +234,7 @@ app.get("/urls/:id", requireLogin, (req, res) => {
     return res.status(403).send('You do not have permission to view this URL');
   }
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user};
-  res.render("urls_show", templateVars);
+  return res.render("urls_show", templateVars);
 });
 
 // Start the server
